@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tienda Digital — Minecraft Premium</title>
+  <style>
+    /* Reset */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html,body { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #000; color: #fff; }
+    :root{
+      --accent: #00fff0; /* neón cyan */
+      --accent-2: #ff00ff; /* neón magenta */
+      --glass: rgba(255,255,255,0.03);
+      --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      --price: 4.75;
+    }
+
+    /* Layout */
+    .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:40px; background:
+      radial-gradient(600px 400px at 10% 10%, rgba(0,255,240,0.04), transparent 10%),
+      radial-gradient(500px 300px at 90% 90%, rgba(255,0,255,0.03), transparent 10%); 
+    }
+
+    .card {
+      width:100%; max-width:980px;
+      background: var(--card-bg);
+      border-radius:18px;
+      padding:28px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7), 0 0 40px rgba(0,255,240,0.06);
+      border: 1px solid rgba(255,255,255,0.04);
+      position:relative;
+      overflow:hidden;
+      backdrop-filter: blur(6px);
+    }
+
+    /* Neon stripes */
+    .card::before, .card::after {
+      content:"";
+      position:absolute; inset:0;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+    .card::before {
+      background: linear-gradient(90deg, transparent, rgba(0,255,240,0.03), transparent);
+      transform: translateX(-30%);
+      animation: slide 6s linear infinite;
+    }
+    .card::after {
+      background: linear-gradient(180deg, transparent 0%, rgba(255,0,255,0.02) 50%, transparent 100%);
+      transform: translateY(20%);
+      animation: float 8s ease-in-out infinite;
+    }
+    @keyframes slide { 0%{transform:translateX(-30%)} 50%{transform:translateX(30%)} 100%{transform:translateX(-30%)} }
+    @keyframes float { 0%{transform:translateY(20%)} 50%{transform:translateY(-20%)} 100%{transform:translateY(20%)} }
+
+    .grid {
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:24px;
+      align-items:start;
+    }
+
+    .left h1 { font-size:28px; margin-bottom:10px; letter-spacing: -0.5px; color: #fff; }
+    .left p.lead { color: #dfe; opacity:0.9; margin-bottom:18px; }
+    .features { display:grid; gap:12px; margin-top:14px; }
+    .feat { background:var(--glass); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); display:flex; gap:12px; align-items:center; }
+    .dot { width:12px; height:12px; border-radius:50%; box-shadow: 0 0 12px rgba(0,255,240,0.6), inset 0 -2px 6px rgba(0,0,0,0.4); background: linear-gradient(180deg, var(--accent), #00bca5); }
+
+    /* Card right */
+    .right { background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006)); padding:18px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); position:sticky; top:30px; }
+    .price { font-size:36px; font-weight:700; letter-spacing:-1px; margin-bottom:6px; }
+    .small { font-size:13px; opacity:0.8; margin-bottom:14px; }
+
+    /* Shiny buttons */
+    .pay-btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:14px 18px; border-radius:12px; cursor:pointer; user-select:none;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.6), 0 0 18px rgba(0,255,240,0.08);
+      transition: transform .12s ease, box-shadow .12s ease;
+      position:relative; overflow:hidden;
+    }
+    .pay-btn:active { transform: translateY(2px) scale(.997); }
+    .pay-btn .glow {
+      position:absolute; inset:-2px; pointer-events:none; background: linear-gradient(90deg, rgba(0,255,240,0.12), rgba(255,0,255,0.08), rgba(0,255,240,0.12));
+      filter: blur(18px); opacity:0; transition: opacity .18s ease;
+      mix-blend-mode: screen;
+    }
+    .pay-btn:hover .glow { opacity:1; }
+    .pay-btn .label { position:relative; z-index:2; font-weight:700; color:#000; }
+
+    /* Litecoin style small badge */
+    .ltc-badge { display:inline-flex; align-items:center; gap:8px; background:#fff; color:#111; padding:8px 10px; border-radius:10px; font-weight:700; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+
+    /* Modal */
+    .modal { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:60; visibility:hidden; opacity:0; transition: opacity .18s ease, visibility .18s; }
+    .modal.open { visibility:visible; opacity:1; }
+    .modal .panel { width:420px; max-width:92%; background:#0b0b0b; border-radius:12px; padding:18px; border:1px solid rgba(255,255,255,0.03); box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+    .qr { width:220px; height:220px; background:repeating-conic-gradient(#111,#111 10deg,#0b0b0b 10deg,#0b0b0b 20deg); display:flex; align-items:center; justify-content:center; color:#888; border-radius:8px; margin:10px auto; }
+
+    footer.note { margin-top:18px; font-size:12px; opacity:0.85; color:#cfcfcf; }
+
+    /* Responsive */
+    @media (max-width:880px) {
+      .grid { grid-template-columns: 1fr; }
+      .right { position:relative; top:0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="region" aria-label="Tienda digital">
+      <div class="grid">
+        <div class="left">
+          <h1>Minecraft Premium</h1>
+          <p class="lead">Entrega instantánea tras confirmación de pago. Compra segura y atención al cliente 24/7.</p>
+
+          <div class="features">
+            <div class="feat"><span class="dot"></span><div><strong>Entrega automática</strong><div style="font-size:13px; opacity:.85;">Recibirás el producto cuando el pago se confirme.</div></div></div>
+            <div class="feat"><span class="dot" style="background:linear-gradient(180deg,var(--accent-2),#c400c4)"></span><div><strong>Soporte</strong><div style="font-size:13px; opacity:.85;">Soporte por correo o sistema de tickets.</div></div></div>
+            <div class="feat"><span class="dot" style="background:linear-gradient(180deg,#fff3c0,#ffd166)"></span><div><strong>Pago con Litecoin</strong><div style="font-size:13px; opacity:.85;">Se aceptan pagos en LTC (procesador externo requerido).</div></div></div>
+          </div>
+
+          <section style="margin-top:20px;">
+            <h3 style="margin-bottom:8px;">Descripción</h3>
+            <p style="opacity:.9; line-height:1.45; font-size:14px;">
+              Cuenta Premium Minecraft, entrega instantánea tras confirmación automática de pago.
+            </p>
+
+            <div style="margin-top:14px; font-size:13px;">
+              <strong>Precio:</strong> <span style="color:var(--accent); font-weight:700;">US$ <span id="price-display">4.75</span></span>
+            </div>
+          </section>
+
+          <footer class="note">
+            Nota legal: Esta plantilla es para la venta de productos digitales legales. No apoyamos ni facilitamos la venta de bienes o accesos obtenidos sin autorización.
+          </footer>
+        </div>
+
+        <div class="right">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+              <div class="price">US$ <span id="price">4.75</span></div>
+              <div class="small">Pago seguro — Litecoin (LTC)</div>
+            </div>
+            <div class="ltc-badge" title="Litecoin">Ł LTC</div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-direction:column;">
+            <!-- Botón de pago -->
+            <button id="payBtn" class="pay-btn" aria-label="Pagar con Litecoin">
+              <div class="glow"></div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));">
+                <path d="M5 12h14" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 7h10" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 17h10" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              <span class="label">Pagar US$ <span id="priceBtn">4.75</span></span>
+            </button>
+
+            <button id="manualBtn" class="pay-btn" style="background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.02);">
+              <div class="glow"></div>
+              <span style="color:#fff; font-weight:700;">Contactar soporte</span>
+            </button>
+
+            <div style="margin-top:8px; font-size:13px; opacity:.9;">
+              Tras confirmar el pago, el producto se entregará automáticamente. Implementa verificación en el servidor para comprobar transacción en la blockchain o webhook del procesador de pagos.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de pago -->
+  <div id="modal" class="modal" role="dialog" aria-hidden="true" aria-modal="true">
+    <div class="panel">
+      <h3 id="modalTitle">Pagar con Litecoin</h3>
+      <p style="opacity:.9; font-size:14px;">Escanea el código QR o sigue las instrucciones para enviar exactamente <strong>US$ <span id="modalPriceText">4.75</span></strong> en LTC. Esperando confirmación de pago...</p>
+
+      <div class="qr" id="qr">
+        <!-- Aquí se muestra la dirección real -->
+        QR PREVIEW
+      </div>
+
+      <div style="display:flex; gap:8px; justify-content:center; margin-top:8px;">
+        <button id="checkBtn" class="pay-btn" style="padding:10px 14px;"><span class="label" style="color:#000;">Verificar pago</span></button>
+        <button id="closeModal" class="pay-btn" style="padding:10px 14px; background:transparent; border:1px solid rgba(255,255,255,0.06);"><span class="label" style="color:#fff;">Cerrar</span></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- CONFIGURACIÓN ACTUALIZADA ---
+    const PRICE_USD = 4.75;
+    const LITECOIN_ADDRESS = "LQrKRR3CY2YSPdmUnGgjX6t11UrjDSiccd";
+    const AMOUNT_LTC = "0.068"; // Valor estimado (~$70/LTC). Solo para visualización.
+
+    // Actualizar precios en la UI
+    document.getElementById('price-display').textContent = PRICE_USD.toFixed(2);
+    document.getElementById('price').textContent = PRICE_USD.toFixed(2);
+    document.getElementById('priceBtn').textContent = PRICE_USD.toFixed(2);
+    document.getElementById('modalPriceText').textContent = PRICE_USD.toFixed(2);
+
+    // Elementos del DOM
+    const payBtn = document.getElementById('payBtn');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementById('closeModal');
+    const checkBtn = document.getElementById('checkBtn');
+    const qrBox = document.getElementById('qr');
+
+    // Abrir modal y mostrar dirección de pago
+    payBtn.addEventListener('click', async () => {
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      qrBox.textContent = 'Generando...';
+
+      try {
+        await new Promise(r => setTimeout(r, 700));
+        qrBox.innerHTML = `
+          <div style="text-align:center; color:#fff; font-size:13px;">
+            <div style="opacity:0.9; margin-bottom:10px;">
+              Enviar exactamente <strong>${AMOUNT_LTC} LTC</strong>
+            </div>
+            <div style="font-family:monospace; font-size:12px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; word-break:break-all;">
+              ${LITECOIN_ADDRESS}
+            </div>
+            <div style="margin-top:12px; font-size:11px; opacity:0.7;">
+              ⚠️ Usa una billetera compatible con Litecoin
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        qrBox.textContent = 'Error al generar la dirección de pago.';
+      }
+    });
+
+    // Cerrar modal
+    closeModal.addEventListener('click', () => {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+    });
+
+    // Verificar pago (simulado)
+    checkBtn.addEventListener('click', async () => {
+      checkBtn.disabled = true;
+      checkBtn.querySelector('.label').textContent = 'Verificando...';
+      try {
+        await new Promise(r => setTimeout(r, 1200));
+        const simulated = { status: 'confirmed', delivery: 'Código: ABCD-1234-XYZ' };
+        if (simulated.status === 'confirmed') {
+          alert('✅ Pago confirmado.\nTu producto: ' + simulated.delivery);
+          modal.classList.remove('open');
+        } else {
+          alert('⏳ Pago aún no confirmado. Revisa tu transacción.');
+        }
+      } catch (err) {
+        alert('Error al verificar. Contacta soporte.');
+      } finally {
+        checkBtn.disabled = false;
+        checkBtn.querySelector('.label').textContent = 'Verificar pago';
+      }
+    });
+
+    // Botón de soporte
+    document.getElementById('manualBtn').addEventListener('click', () => {
+      window.location.href = 'mailto:soporte@tudominio.com?subject=Soporte%20Compra%20Litecoin';
+    });
+
+    // Cerrar con tecla Escape
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    });
+  </script>
+</body>
+</html>
