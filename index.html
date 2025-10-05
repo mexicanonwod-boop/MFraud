@@ -9,8 +9,8 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html,body { height: 100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #000; color: #fff; }
     :root{
-      --accent: #00fff0; /* neón cyan */
-      --accent-2: #ff00ff; /* neón magenta */
+      --accent: #00fff0;
+      --accent-2: #ff00ff;
       --glass: rgba(255,255,255,0.03);
       --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       --price: 4.75;
@@ -181,95 +181,61 @@
       <p style="opacity:.9; font-size:14px;">Escanea el código QR o sigue las instrucciones para enviar exactamente <strong>US$ <span id="modalPriceText">4.75</span></strong> en LTC. Esperando confirmación de pago...</p>
 
       <div class="qr" id="qr">
-        <!-- Aquí se muestra la dirección real -->
         QR PREVIEW
       </div>
 
       <div style="display:flex; gap:8px; justify-content:center; margin-top:8px;">
-        <button id="checkBtn" class="pay-btn" style="padding:10px 14px;"><span class="label" style="color:#000;">Verificar pago</span></button>
-        <button id="closeModal" class="pay-btn" style="padding:10px 14px; background:transparent; border:1px solid rgba(255,255,255,0.06);"><span class="label" style="color:#fff;">Cerrar</span></button>
+        <button id="closeModal" class="pay-btn" style="padding:10px 14px; background:transparent; border:1px solid rgba(255,255,255,0.06);">
+          <span class="label" style="color:#fff;">Cerrar</span>
+        </button>
       </div>
     </div>
   </div>
 
   <script>
-    // --- CONFIGURACIÓN ACTUALIZADA ---
     const PRICE_USD = 4.75;
     const LITECOIN_ADDRESS = "LQrKRR3CY2YSPdmUnGgjX6t11UrjDSiccd";
-    const AMOUNT_LTC = "0.068"; // Valor estimado (~$70/LTC). Solo para visualización.
+    const AMOUNT_LTC = "0.068";
 
-    // Actualizar precios en la UI
     document.getElementById('price-display').textContent = PRICE_USD.toFixed(2);
     document.getElementById('price').textContent = PRICE_USD.toFixed(2);
     document.getElementById('priceBtn').textContent = PRICE_USD.toFixed(2);
     document.getElementById('modalPriceText').textContent = PRICE_USD.toFixed(2);
 
-    // Elementos del DOM
     const payBtn = document.getElementById('payBtn');
     const modal = document.getElementById('modal');
     const closeModal = document.getElementById('closeModal');
-    const checkBtn = document.getElementById('checkBtn');
     const qrBox = document.getElementById('qr');
 
-    // Abrir modal y mostrar dirección de pago
     payBtn.addEventListener('click', async () => {
       modal.classList.add('open');
       modal.setAttribute('aria-hidden', 'false');
       qrBox.textContent = 'Generando...';
 
-      try {
-        await new Promise(r => setTimeout(r, 700));
-        qrBox.innerHTML = `
-          <div style="text-align:center; color:#fff; font-size:13px;">
-            <div style="opacity:0.9; margin-bottom:10px;">
-              Enviar exactamente <strong>${AMOUNT_LTC} LTC</strong>
-            </div>
-            <div style="font-family:monospace; font-size:12px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; word-break:break-all;">
-              ${LITECOIN_ADDRESS}
-            </div>
-            <div style="margin-top:12px; font-size:11px; opacity:0.7;">
-              ⚠️ Usa una billetera compatible con Litecoin
-            </div>
+      await new Promise(r => setTimeout(r, 700));
+      qrBox.innerHTML = 
+        `<div style="text-align:center; color:#fff; font-size:13px;">
+          <div style="opacity:0.9; margin-bottom:10px;">
+            Enviar exactamente <strong>${AMOUNT_LTC} LTC</strong>
           </div>
-        `;
-      } catch (err) {
-        qrBox.textContent = 'Error al generar la dirección de pago.';
-      }
+          <div style="font-family:monospace; font-size:12px; padding:10px; background:rgba(255,255,255,0.03); border-radius:8px; word-break:break-all;">
+            ${LITECOIN_ADDRESS}
+          </div>
+          <div style="margin-top:12px; font-size:11px; opacity:0.7;">
+            ⚠️ Usa una billetera compatible con Litecoin
+          </div>
+        </div>`;
     });
 
-    // Cerrar modal
     closeModal.addEventListener('click', () => {
       modal.classList.remove('open');
       modal.setAttribute('aria-hidden', 'true');
     });
 
-    // Verificar pago (simulado)
-    checkBtn.addEventListener('click', async () => {
-      checkBtn.disabled = true;
-      checkBtn.querySelector('.label').textContent = 'Verificando...';
-      try {
-        await new Promise(r => setTimeout(r, 1200));
-        const simulated = { status: 'confirmed', delivery: 'Código: ABCD-1234-XYZ' };
-        if (simulated.status === 'confirmed') {
-          alert('✅ Pago confirmado.\nTu producto: ' + simulated.delivery);
-          modal.classList.remove('open');
-        } else {
-          alert('⏳ Pago aún no confirmado. Revisa tu transacción.');
-        }
-      } catch (err) {
-        alert('Error al verificar. Contacta soporte.');
-      } finally {
-        checkBtn.disabled = false;
-        checkBtn.querySelector('.label').textContent = 'Verificar pago';
-      }
-    });
-
-    // Botón de soporte
     document.getElementById('manualBtn').addEventListener('click', () => {
       window.location.href = 'mailto:soporte@tudominio.com?subject=Soporte%20Compra%20Litecoin';
     });
 
-    // Cerrar con tecla Escape
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         modal.classList.remove('open');
